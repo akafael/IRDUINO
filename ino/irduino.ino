@@ -16,6 +16,8 @@
 #define BTN_UP 100
 #define BTN_DOWN 259
 
+#define PIN_MOLHAR_JARDIM 13
+
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
 byte pinoBotao = A0;
@@ -24,10 +26,16 @@ int valorBotao = 0;
 int opcao_tela = 0;
 
 void setup(){
-	Serial.begin(9600);
-	setTime(9,59,0,1,1,11); // set time to Saturday 8:29:00am Jan 1 2011
+  Serial.begin(9600);
+	setTime(7,59,50,5,6,14); // set time to Saturday 8:29:00am Jan 1 2011
   
-  lcd.clear(); 
+  pinMode(PIN_MOLHAR_JARDIM,OUTPUT);
+
+  desligarIrrigacao();
+  lcd.clear();
+
+  Alarm.alarmRepeat(8,00,0, acionarIrrigacao);  // 8:00am every day
+  Alarm.alarmRepeat(8,05,0, desligarIrrigacao);  // 8:05am every day
 }
 
 void loop(){
@@ -44,6 +52,20 @@ void loop(){
           opcao_tela = 0;
         break;
   }
+  Alarm.delay(10);
+}
+
+/*
+ * Funções para controle do módulo relé
+ */
+void acionarIrrigacao(){
+  digitalWrite(PIN_MOLHAR_JARDIM, HIGH);
+  Serial.println("Molhando o Jardim");
+}
+
+void desligarIrrigacao(){
+  digitalWrite(PIN_MOLHAR_JARDIM, LOW);
+  Serial.println("Feixando a torneira");
 }
 
 /*
@@ -76,15 +98,7 @@ void printDigits(int digits)
 void menu(){
   lcd.setCursor(0,1);
   navegarMenu();
-  switch (opcao_tela) {
-      case UI_SET_TIME:
-        lcd.print(MENU_SET_TIME);
-        break;
-      case UI_MENU:
-      default:
-        lcd.print(MENU_INICIO);
-        opcao_tela=UI_MENU;
-  }
+  lcd.print(MENU_INICIO);
 }
 
 void navegarMenu(){
@@ -96,7 +110,7 @@ void navegarMenu(){
       if(valorBotao <= BTN_DOWN){
       }else{
         if(valorBotao <= BTN_LEFT){
-          opcao_tela = 0;
+          opcao_tela = UI_TIME;
         }else{
           if(valorBotao <= BTN_SELECT){
           }
