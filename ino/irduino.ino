@@ -10,13 +10,7 @@
 
 #include "irduino.h"
 
-#define BTN_SELECT 642
-#define BTN_LEFT 413
-#define BTN_RIGHT 0
-#define BTN_UP 100
-#define BTN_DOWN 259
-
-#define PIN_MOLHAR_JARDIM 13
+#define PIN_MOLHAR_JARDIM 12
 
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
@@ -27,32 +21,52 @@ int opcao_tela = 0;
 
 void setup(){
   Serial.begin(9600);
-	setTime(7,59,50,5,6,14); // set time to Saturday 8:29:00am Jan 1 2011
+	setTime(22,45,00,1,6,14);
   
   pinMode(PIN_MOLHAR_JARDIM,OUTPUT);
 
   desligarIrrigacao();
+  lcd.begin(16, 2);    //Definindo o LCD com 16 colunas e 2 linhas
   lcd.clear();
+  lcd.setCursor(0, 0); //Definindo o cursor na posição inicial do LCD
 
-  Alarm.alarmRepeat(8,00,0, acionarIrrigacao);  // 8:00am every day
-  Alarm.alarmRepeat(8,05,0, desligarIrrigacao);  // 8:05am every day
+  Alarm.alarmRepeat(7,00,0, acionarIrrigacao);  // 7:00am every day
+  Alarm.alarmRepeat(7,01,0, desligarIrrigacao);  // 7:01am every day
+
+  Alarm.alarmRepeat(12,00,0, acionarIrrigacao);  // 12:00am every day
+  Alarm.alarmRepeat(12,01,0, desligarIrrigacao);  // 12:01am every day
+
+  Alarm.alarmRepeat(18,00,0, acionarIrrigacao);  // 6:00pm every day
+  Alarm.alarmRepeat(18,01,0, desligarIrrigacao);  // 6:01pm every day
 }
 
 void loop(){
   valorBotao = analogRead(pinoBotao);
   switch (opcao_tela) {
-      case 1:
+      case UI_MENU:
         menu();
         break;
+      case UI_WATER:
+        lcdDigitalClockDisplay();
+        lcd.setCursor(0, 1);
+        lcd.print(ALERTA_MOLHANDO);
+        break;
+      case UI_SET_TIME:
+      case UI_SET_TIME_HOUR:
+      case UI_SET_TIME_MIN:
+      case UI_SET_TIME_SEC:
+        navergarMenuHora();
+        break;
+      case UI_TIME:
       default:
-        digitalClockDisplay();
+        lcdDigitalClockDisplay();
         if((valorBotao <= BTN_SELECT)&&((valorBotao > BTN_LEFT)))
-          opcao_tela = 1;
+          opcao_tela = UI_MENU;
         else
-          opcao_tela = 0;
+          opcao_tela = UI_TIME;
         break;
   }
-  Alarm.delay(10);
+  Alarm.delay(100);
 }
 
 /*
@@ -61,19 +75,24 @@ void loop(){
 void acionarIrrigacao(){
   digitalWrite(PIN_MOLHAR_JARDIM, HIGH);
   Serial.println("Molhando o Jardim");
+  opcao_tela = UI_WATER;
 }
 
 void desligarIrrigacao(){
   digitalWrite(PIN_MOLHAR_JARDIM, LOW);
   Serial.println("Feixando a torneira");
+  lcd.setCursor(0, 1);
+  lcd.print(LINHA_APAGADA);
+  opcao_tela = UI_TIME;
 }
+
 
 /*
  * Funções para Manipulação do display lcd:
  * E menus
  */
 
-void digitalClockDisplay()
+void lcdDigitalClockDisplay()
 {
   // digital clock display of the time
   lcd.setCursor(0,0);
@@ -82,12 +101,26 @@ void digitalClockDisplay()
   else
     lcd.print("    "); // 4c em branco
   lcd.print(hour());
-  printDigits(minute());
-  printDigits(second());
+  lcdPrintDigits(minute());
+  lcdPrintDigits(second());
   lcd.print("    "); // 4c em branco
 }
 
-void printDigits(int digits)
+void lcdDigitalsetTimeDisplay()
+{
+  // digital clock display of the time
+  lcd.setCursor(0,0);
+  if(hour()<10)
+    lcd.print("<    "); // 5c em branco
+  else
+    lcd.print("<   "); // 4c em branco
+  lcd.print(hour());
+  lcdPrintDigits(minute());
+  lcdPrintDigits(second());
+  lcd.print("   >"); // 4c em branco
+}
+
+void lcdPrintDigits(int digits)
 {
   lcd.print(":");
   if(digits < 10)
@@ -108,14 +141,95 @@ void navegarMenu(){
     if(valorBotao <= BTN_UP){
     }else{
       if(valorBotao <= BTN_DOWN){
+        opcao_tela = UI_SET_TIME;
       }else{
         if(valorBotao <= BTN_LEFT){
           opcao_tela = UI_TIME;
         }else{
           if(valorBotao <= BTN_SELECT){
+            // do something
           }
         }
       }
     }
+  }
+}
+
+void navergarMenuHora(){
+  lcdDigitalsetTimeDisplay();
+  switch (opcao_tela){
+      case UI_SET_TIME:
+        lcd.setCursor(0, 1);
+        lcd.print(MENU_SET_TIME);
+        if(valorBotao <= BTN_RIGHT){
+          opcao_tela = UI_MENU;
+        }else{
+          if(valorBotao <= BTN_LEFT){
+            opcao_tela = UI_SET_TIME_HOUR;
+          }
+        }
+        break;
+      case UI_SET_TIME_HOUR:
+        lcd.setCursor(0, 1);
+        lcd.print(MENU_SET_TIME_HOUR);
+        if(valorBotao<=BTN_RIGHT){
+          opcao_tela = UI_SET_TIME_MIN;
+          if(valorBotao <= BTN_UP){
+            setTime(hour()+1, minute(), second(), day(), month(), year());
+            Alarm.delay(500);
+          }else{
+            if(valorBotao <= BTN_DOWN){
+              setTime(hour()-1, minute(), second(), day(), month(), year());
+              Alarm.delay(500);
+            }else{
+              if(valorBotao <= BTN_LEFT){
+                  opcao_tela = UI_SET_TIME;
+              }
+            }
+          }
+        }
+        break;
+      case UI_SET_TIME_MIN:
+        lcd.setCursor(0, 1);
+        lcd.print(MENU_SET_TIME_MIN);
+        if(valorBotao<=BTN_RIGHT){
+          opcao_tela = UI_SET_TIME_SEC;
+          if(valorBotao <= BTN_UP){
+            setTime(hour(), minute()+1, second(), day(), month(), year());
+            Alarm.delay(500);
+          }else{
+            if(valorBotao <= BTN_DOWN){
+              setTime(hour(), minute()-1, second(), day(), month(), year());
+              Alarm.delay(500);
+            }else{
+              if(valorBotao <= BTN_LEFT){ 
+                  opcao_tela = UI_SET_TIME_HOUR;
+              }
+            }
+          }
+        }
+         break;
+      case UI_SET_TIME_SEC:
+        lcd.setCursor(0, 1);
+        lcd.print(MENU_SET_TIME_SEC);
+        if(valorBotao<=BTN_RIGHT){
+          opcao_tela = UI_SET_TIME_MIN;
+          if(valorBotao <= BTN_UP){
+            setTime(hour(), minute(), second()+1, day(), month(), year());
+            Alarm.delay(500);
+          }else{
+            if(valorBotao <= BTN_DOWN){
+              setTime(hour(), minute(), second()-1, day(), month(), year());
+              Alarm.delay(500);
+            }else{
+              if(valorBotao <= BTN_LEFT){ 
+                  opcao_tela = UI_SET_TIME_HOUR;
+              }
+            }
+          }
+        }
+        break;
+      default:
+        opcao_tela = UI_MENU;
   }
 }
