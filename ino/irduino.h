@@ -28,7 +28,7 @@
 #define BTN_SELECT 642
 #define BTN_LEFT 413
 #define BTN_DOWN 259
-#define BTN_UP 100
+#define BTN_UP 110
 #define BTN_RIGHT 0
 
 #define BTN_SELECT_PRESSED (valor_Botao >=BTN_SELECT)

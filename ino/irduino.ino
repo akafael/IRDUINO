@@ -1,7 +1,7 @@
 /**
  * Programa para controlar um sistema de irrigação feito em arduino
  * @author Rafael Lima
- * @version 0.23
+ * @version 0.33
  */
 
 #include <Time.h>
@@ -21,7 +21,7 @@ int opcao_tela = 0;
 
 void setup(){
   Serial.begin(9600);
-	setTime(22,45,00,1,6,14);
+	setTime(6,59,30,2,6,14);
   
   pinMode(PIN_MOLHAR_JARDIM,OUTPUT);
 
@@ -52,10 +52,16 @@ void loop(){
         lcd.print(ALERTA_MOLHANDO);
         break;
       case UI_SET_TIME:
-      case UI_SET_TIME_HOUR:
-      case UI_SET_TIME_MIN:
-      case UI_SET_TIME_SEC:
         navergarMenuHora();
+        break;
+      case UI_SET_TIME_HOUR:
+        MenuHora_AjusteHora();
+        break;
+      case UI_SET_TIME_MIN:
+        MenuHora_AjusteMin();
+        break;
+      case UI_SET_TIME_SEC:
+        MenuHora_AjusteSec();
         break;
       case UI_TIME:
       default:
@@ -111,13 +117,13 @@ void lcdDigitalsetTimeDisplay()
   // digital clock display of the time
   lcd.setCursor(0,0);
   if(hour()<10)
-    lcd.print("<    "); // 5c em branco
+    lcd.print("-    "); // 5c em branco
   else
-    lcd.print("<   "); // 4c em branco
+    lcd.print("-   "); // 4c em branco
   lcd.print(hour());
   lcdPrintDigits(minute());
   lcdPrintDigits(second());
-  lcd.print("   >"); // 4c em branco
+  lcd.print("   -"); // 4c em branco
 }
 
 void lcdPrintDigits(int digits)
@@ -144,6 +150,8 @@ void navegarMenu(){
         opcao_tela = UI_SET_TIME;
       }else{
         if(valorBotao <= BTN_LEFT){
+          lcd.setCursor(0,1);
+          lcd.print(LINHA_APAGADA);
           opcao_tela = UI_TIME;
         }else{
           if(valorBotao <= BTN_SELECT){
@@ -156,80 +164,87 @@ void navegarMenu(){
 }
 
 void navergarMenuHora(){
-  lcdDigitalsetTimeDisplay();
-  switch (opcao_tela){
-      case UI_SET_TIME:
+  lcdDigitalClockDisplay();
         lcd.setCursor(0, 1);
         lcd.print(MENU_SET_TIME);
-        if(valorBotao <= BTN_RIGHT){
+        if(valorBotao <= BTN_UP){
           opcao_tela = UI_MENU;
         }else{
-          if(valorBotao <= BTN_LEFT){
+          if(valorBotao <= BTN_SELECT){
             opcao_tela = UI_SET_TIME_HOUR;
           }
         }
-        break;
-      case UI_SET_TIME_HOUR:
-        lcd.setCursor(0, 1);
-        lcd.print(MENU_SET_TIME_HOUR);
-        if(valorBotao<=BTN_RIGHT){
+}
+
+void MenuHora_AjusteHora(){
+  lcdDigitalsetTimeDisplay();
+  lcd.setCursor(0, 1);
+  lcd.print(MENU_SET_TIME_HOUR);
+  if(valorBotao<=BTN_RIGHT){
+    opcao_tela = UI_SET_TIME_MIN;
+  }else{
+    if(valorBotao <= BTN_UP){
+      setTime(hour()+1, minute(), second(), day(), month(), year());
+      Alarm.delay(500);
+    }else{
+      if(valorBotao <= BTN_DOWN){
+        setTime(hour()-1, minute(), second(), day(), month(), year());
+        Alarm.delay(500);
+      }else{
+        if(valorBotao <= BTN_LEFT){
+            opcao_tela = UI_SET_TIME_SEC;
+        }else{
+          if(valorBotao <= BTN_SELECT){
+            opcao_tela = UI_SET_TIME;
+          }
+        }
+      }
+    }
+  }
+}
+
+void MenuHora_AjusteMin(){
+  lcdDigitalsetTimeDisplay();
+  lcd.setCursor(0, 1);
+  lcd.print(MENU_SET_TIME_MIN);
+  if(valorBotao<=BTN_RIGHT){
+    opcao_tela = UI_SET_TIME_SEC;
+  }else{
+    if(valorBotao <= BTN_UP){
+      setTime(hour(), minute()+1, second(), day(), month(), year());
+      Alarm.delay(500);
+    }else{
+      if(valorBotao <= BTN_DOWN){
+        setTime(hour(), minute()-1, second(), day(), month(), year());
+        Alarm.delay(500);
+      }else{
+        if(valorBotao <= BTN_LEFT){ 
+            opcao_tela = UI_SET_TIME_HOUR;
+        }
+      }
+    }
+  }
+}
+
+void MenuHora_AjusteSec(){
+  lcdDigitalsetTimeDisplay();
+  lcd.setCursor(0, 1);
+  lcd.print(MENU_SET_TIME_SEC);
+  if(valorBotao<=BTN_RIGHT){
+    opcao_tela = UI_SET_TIME_HOUR;
+  }else{
+    if(valorBotao <= BTN_UP){
+      setTime(hour(), minute(), second()+1, day(), month(), year());
+      Alarm.delay(500);
+    }else{
+      if(valorBotao <= BTN_DOWN){
+        setTime(hour(), minute(), second()-1, day(), month(), year());
+        Alarm.delay(500);
+      }else{
+        if(valorBotao <= BTN_LEFT){ 
           opcao_tela = UI_SET_TIME_MIN;
-          if(valorBotao <= BTN_UP){
-            setTime(hour()+1, minute(), second(), day(), month(), year());
-            Alarm.delay(500);
-          }else{
-            if(valorBotao <= BTN_DOWN){
-              setTime(hour()-1, minute(), second(), day(), month(), year());
-              Alarm.delay(500);
-            }else{
-              if(valorBotao <= BTN_LEFT){
-                  opcao_tela = UI_SET_TIME;
-              }
-            }
-          }
         }
-        break;
-      case UI_SET_TIME_MIN:
-        lcd.setCursor(0, 1);
-        lcd.print(MENU_SET_TIME_MIN);
-        if(valorBotao<=BTN_RIGHT){
-          opcao_tela = UI_SET_TIME_SEC;
-          if(valorBotao <= BTN_UP){
-            setTime(hour(), minute()+1, second(), day(), month(), year());
-            Alarm.delay(500);
-          }else{
-            if(valorBotao <= BTN_DOWN){
-              setTime(hour(), minute()-1, second(), day(), month(), year());
-              Alarm.delay(500);
-            }else{
-              if(valorBotao <= BTN_LEFT){ 
-                  opcao_tela = UI_SET_TIME_HOUR;
-              }
-            }
-          }
-        }
-         break;
-      case UI_SET_TIME_SEC:
-        lcd.setCursor(0, 1);
-        lcd.print(MENU_SET_TIME_SEC);
-        if(valorBotao<=BTN_RIGHT){
-          opcao_tela = UI_SET_TIME_MIN;
-          if(valorBotao <= BTN_UP){
-            setTime(hour(), minute(), second()+1, day(), month(), year());
-            Alarm.delay(500);
-          }else{
-            if(valorBotao <= BTN_DOWN){
-              setTime(hour(), minute(), second()-1, day(), month(), year());
-              Alarm.delay(500);
-            }else{
-              if(valorBotao <= BTN_LEFT){ 
-                  opcao_tela = UI_SET_TIME_HOUR;
-              }
-            }
-          }
-        }
-        break;
-      default:
-        opcao_tela = UI_MENU;
+      }
+    }
   }
 }
