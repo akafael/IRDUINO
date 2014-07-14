@@ -11,6 +11,7 @@
 #include "irduino.h"
 
 #define PIN_MOLHAR_JARDIM 12
+#define PIN_BACKLIGHT     10
 
 LiquidCrystal lcd(8, 9, 4, 5, 6, 7);
 
@@ -24,6 +25,8 @@ void setup(){
 	setTime(6,59,30,2,6,14);
   
   pinMode(PIN_MOLHAR_JARDIM,OUTPUT);
+  pinMode(PIN_BACKLIGHT,OUTPUT);
+  digitalWrite(PIN_BACKLIGHT, LOW);
 
   desligarIrrigacao();
   lcd.begin(16, 2);    //Definindo o LCD com 16 colunas e 2 linhas
@@ -80,12 +83,14 @@ void loop(){
  */
 void acionarIrrigacao(){
   digitalWrite(PIN_MOLHAR_JARDIM, HIGH);
+  digitalWrite(PIN_BACKLIGHT, HIGH);
   Serial.println("Molhando o Jardim");
   opcao_tela = UI_WATER;
 }
 
 void desligarIrrigacao(){
   digitalWrite(PIN_MOLHAR_JARDIM, LOW);
+  digitalWrite(PIN_BACKLIGHT, LOW);
   Serial.println("Feixando a torneira");
   lcd.setCursor(0, 1);
   lcd.print(LINHA_APAGADA);
@@ -220,6 +225,10 @@ void MenuHora_AjusteMin(){
       }else{
         if(valorBotao <= BTN_LEFT){ 
             opcao_tela = UI_SET_TIME_HOUR;
+        }else{
+          if(valorBotao <= BTN_SELECT){
+            opcao_tela = UI_SET_TIME;
+          }
         }
       }
     }
@@ -243,6 +252,10 @@ void MenuHora_AjusteSec(){
       }else{
         if(valorBotao <= BTN_LEFT){ 
           opcao_tela = UI_SET_TIME_MIN;
+        }else{
+          if(valorBotao <= BTN_SELECT){
+            opcao_tela = UI_SET_TIME;
+          }
         }
       }
     }
