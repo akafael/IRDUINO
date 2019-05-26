@@ -5,8 +5,10 @@ Sistema Automatizado de Irrigação feito em Arduino
 
 ## Requisitos
 
-### Software:
- - [Biblioteca TimeAlarms](https://github.com/PaulStoffregen/TimeAlarms)
+### Software - Bibliotecas Arduino:
+ - [LiquidCrystal](https://github.com/arduino-libraries/LiquidCrystal)
+ - [Time](https://github.com/PaulStoffregen/Time)
+ - [TimeAlarms](https://github.com/PaulStoffregen/TimeAlarms)
 
 ### Hardware:
  - [Arduino Uno](http://arduino.cc/en/Main/arduinoBoardUno)
